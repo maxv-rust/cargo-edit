@@ -245,7 +245,6 @@ impl Manifests {
             self.0
                 .iter()
                 .flat_map(|&(_, ref package)| package.dependencies.clone())
-                .filter(is_version_dep)
                 .filter_map(|dependency| {
                     let is_prerelease = dependency.req.to_string().contains('-');
                     if selected_dependencies.is_empty() {

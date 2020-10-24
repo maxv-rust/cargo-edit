@@ -71,16 +71,17 @@ fn merge_dependencies(old_dep: &mut toml_edit::Item, new: &Dependency) {
 
     let new_toml = new.to_toml().1;
 
-    if str_or_1_len_table(old_dep) {
-        // The old dependency is just a version/git/path. We are safe to overwrite.
+    if old_dep.is_str() {
+        // The old dependency is just a version. We are safe to overwrite.
         *old_dep = new_toml;
     } else if old_dep.is_table_like() {
-        for key in &["version", "path", "git"] {
-            // remove this key/value pairs
-            old_dep[key] = toml_edit::Item::None;
-        }
         if let Some(name) = new_toml.as_str() {
-            old_dep["version"] = toml_edit::value(name);
+            match &mut old_dep["version"] {
+                // There may be a reason the crate doesn't have a version
+                toml_edit::Item::None => {},
+                // Update the version old version with the new one
+                version => *version = toml_edit::value(name),
+            }
         } else {
             merge_inline_table(old_dep, &new_toml);
         }
